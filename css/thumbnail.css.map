@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": "AAIA,yBAA0B;EAExB,MAAM,EAAE,CAAC;EACT,QAAQ,EAAE,MAAM;EAEhB,KAAK,EAAE,IAAI;EACX,KAAK,EAAE,cAAc;EACrB,KAAK,EAAE,sBAAsB;EAC7B,KAAK,EAAE,cAAc;EAErB,MAAM,EAAE,IAAI;EACZ,MAAM,EAAE,cAAc;EACtB,MAAM,EAAE,sBAAsB;EAC9B,MAAM,EAAE,cAAc",
+"sources": ["thumbnail.scss"],
+"names": [],
+"file": "thumbnail.css"
+}

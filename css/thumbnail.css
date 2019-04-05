@@ -1,0 +1,13 @@
+#threejs-canvas-container {
+  margin: 0;
+  overflow: hidden;
+  width: 100%;
+  width: -moz-available;
+  width: -webkit-fill-available;
+  width: fill-available;
+  height: 100%;
+  height: -moz-available;
+  height: -webkit-fill-available;
+  height: fill-available; }
+
+/*# sourceMappingURL=thumbnail.css.map */
