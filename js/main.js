@@ -25,7 +25,7 @@ const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
 let [ viewport_width, viewport_height, scratchSpaceYOffset ] = [ 0, 0, 512 ];
 let [ canvas_width, canvas_height ] = [ 0, 0 ];
-
+let [ x, y, w, h ] = [ 0, 0, 0, 0 ];
 let main = async(container) => {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -36,10 +36,13 @@ let main = async(container) => {
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
     [ canvas_width, canvas_height ] = [ container.offsetWidth, container.offsetHeight + scratchSpaceYOffset ];
+    [ viewport_width, viewport_height ] = [ container.offsetWidth, container.offsetHeight ];
+
     renderer.setSize(canvas_width, canvas_height);
 
-    [ viewport_width, viewport_height ] = [ container.offsetWidth, container.offsetHeight ];
-    renderer.setViewport(0, scratchSpaceYOffset, viewport_width, viewport_height);
+    // sub-region of container
+    [ x, y, w, h ] = [ viewport_width/3, scratchSpaceYOffset + viewport_height/3, viewport_width/3, viewport_height/3 ];
+    renderer.setViewport(x, y, w, h);
 
     camera = new THREE.PerspectiveCamera(fov, viewport_width / viewport_height, near, far);
     orbitControl = new OrbitControls(camera, renderer.domElement);
@@ -154,13 +157,18 @@ let renderLoop = () => {
 
 let onWindowResize = () => {
 
+    [ canvas_width, canvas_height ] = [ containerThreeJS.offsetWidth, containerThreeJS.offsetHeight + scratchSpaceYOffset ];
     [ viewport_width, viewport_height ] = [ containerThreeJS.offsetWidth, containerThreeJS.offsetHeight ];
+
+    renderer.setSize(canvas_width, canvas_height);
+
+    // sub-region of container
+    [ x, y, w, h ] = [ viewport_width/3, scratchSpaceYOffset + viewport_height/3, viewport_width/3, viewport_height/3 ];
+    renderer.setViewport(x, y, w, h);
 
     camera.aspect = viewport_width / viewport_height;
     camera.updateProjectionMatrix();
 
-    renderer.setSize(viewport_width, scratchSpaceYOffset + viewport_height);
-    renderer.setViewport(0, scratchSpaceYOffset, viewport_width, viewport_height);
 };
 
 export { main };
