@@ -9,42 +9,52 @@ let orbitControl;
 
 let showSTMaterial;
 
-let threeJSContainer;
+const showSTConfig =
+    {
+        uniforms: {},
+        vertexShader: document.getElementById( 'show_st_vert' ).textContent,
+        fragmentShader: document.getElementById( 'show_st_frag' ).textContent,
+        side: THREE.DoubleSide
+    };
+
+showSTMaterial = new THREE.ShaderMaterial( showSTConfig );
+
+let containerThreeJS;
 
 const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
-let [ w, h, scratchSpaceYOffset ] = [ 0, 0, 0 ];
+let [ viewport_width, viewport_height, scratchSpaceYOffset ] = [ 0, 0, 512 ];
+let [ canvas_width, canvas_height ] = [ 0, 0 ];
+let [ x, y, w, h ] = [ 0, 0, 0, 0 ];
 let main = async(container) => {
-
-    const showSTConfig =
-        {
-            uniforms: {},
-            vertexShader: document.getElementById( 'show_st_vert' ).textContent,
-            fragmentShader: document.getElementById( 'show_st_frag' ).textContent,
-            side: THREE.DoubleSide
-        };
-
-    showSTMaterial = new THREE.ShaderMaterial( showSTConfig );
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     container.appendChild(renderer.domElement);
-    threeJSContainer = container;
+    containerThreeJS = container;
 
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
-    [ w, h, scratchSpaceYOffset ] = [ container.offsetWidth, container.offsetHeight, container.offsetHeight];
+    [ canvas_width, canvas_height ] = [ container.offsetWidth, container.offsetHeight + scratchSpaceYOffset ];
+    [ viewport_width, viewport_height ] = [ container.offsetWidth, container.offsetHeight ];
 
-    renderer.setSize(w, scratchSpaceYOffset + h);
-    renderer.setViewport(0, scratchSpaceYOffset, w, h);
+    renderer.setSize(canvas_width, canvas_height);
 
-    camera = new THREE.PerspectiveCamera(fov, w / h, near, far);
+    // sub-region of container
+    [ x, y, w, h ] = [ viewport_width/3, scratchSpaceYOffset + viewport_height/3, viewport_width/3, viewport_height/3 ];
+    renderer.setViewport(x, y, w, h);
+
+    camera = new THREE.PerspectiveCamera(fov, viewport_width / viewport_height, near, far);
     orbitControl = new OrbitControls(camera, renderer.domElement);
     scene = new THREE.Scene();
 
     setup(scene, camera, orbitControl);
 
     renderLoop();
+
+};
+
+let poseViewport = ({ renderer, x, y, w, h }) => {
 
 };
 
@@ -60,9 +70,6 @@ let setup = (scene, camera, orbitControl) => {
     const dimen = 16;
 
     let [ locationX, locationY, locationZ ] = [ dimen, dimen, dimen ];
-    // [ locationX, locationY, locationZ ] = [ 2*dimen, 0, 2*dimen ];
-    // [ locationX, locationY, locationZ ] = [ 0, 0, 3*dimen ];
-    // [ locationX, locationY, locationZ ] = [ 3*dimen, 0, 0 ];
 
     camera.position.set(locationX, locationY, locationZ);
     camera.lookAt( target );
@@ -70,10 +77,6 @@ let setup = (scene, camera, orbitControl) => {
     orbitControl.screenSpacePanning = false;
     orbitControl.target = target;
     orbitControl.update();
-
-    // const groundPlane = new THREE.GridHelper(4 * dimen, 4 * dimen, appleCrayonColorHexValue('steel'), appleCrayonColorHexValue('lead'));
-    // groundPlane.position.set(targetX, targetY, targetZ);
-    // scene.add( groundPlane );
 
     const texture = new THREE.TextureLoader().load( 'texture/uv.png' );
     const textureMaterial = new THREE.MeshBasicMaterial( { map: texture } );
@@ -154,13 +157,18 @@ let renderLoop = () => {
 
 let onWindowResize = () => {
 
-    [ w, h ] = [ threeJSContainer.offsetWidth, threeJSContainer.offsetHeight ];
+    [ canvas_width, canvas_height ] = [ containerThreeJS.offsetWidth, containerThreeJS.offsetHeight + scratchSpaceYOffset ];
+    [ viewport_width, viewport_height ] = [ containerThreeJS.offsetWidth, containerThreeJS.offsetHeight ];
 
-    camera.aspect = w / h;
+    renderer.setSize(canvas_width, canvas_height);
+
+    // sub-region of container
+    [ x, y, w, h ] = [ viewport_width/3, scratchSpaceYOffset + viewport_height/3, viewport_width/3, viewport_height/3 ];
+    renderer.setViewport(x, y, w, h);
+
+    camera.aspect = viewport_width / viewport_height;
     camera.updateProjectionMatrix();
 
-    renderer.setSize(w, scratchSpaceYOffset + h);
-    renderer.setViewport(0, scratchSpaceYOffset, w, h);
 };
 
 export { main };
