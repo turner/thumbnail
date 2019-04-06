@@ -1,11 +1,14 @@
 import * as THREE from './threejs_es6/three.module.js';
 import OrbitControls from './threejs_es6/orbit-controls-es6.js';
+import Thumbnail from './thumbnailPalette.js';
 import { appleCrayonColorThreeJS, appleCrayonColorHexValue } from './color.js';
 
 let scene;
 let renderer;
 let camera;
 let orbitControl;
+
+let thumbnail;
 
 let showSTMaterial;
 
@@ -26,6 +29,8 @@ const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 const scratchSpaceYOffset = 512;
 const thumbnailRect = { x: 32, y: scratchSpaceYOffset + 32, w: 512, h: 512 };
 let main = async(container) => {
+
+    thumbnail = new Thumbnail({ container, palette: $('#trace3d_thumbnail_palette').get(0) });
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     container.appendChild(renderer.domElement);
