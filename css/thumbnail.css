@@ -10,9 +10,10 @@
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    width: 100%; }
+    width: 100%;
+    height: 100%; }
     .card .card-body .trace3d_card_drag_container {
       cursor: grab;
       display: flex;
@@ -27,16 +28,13 @@
         display: block; }
 
 #trace3d_thumbnail_palette.card {
-  width: 256px;
-  height: 272px;
+  width: 512px;
+  height: 528px;
   align-items: center; }
-  #trace3d_thumbnail_palette.card #trace3d_thumbnail_palette_body.card-body {
-    width: 256px;
-    height: 272px; }
-    #trace3d_thumbnail_palette.card #trace3d_thumbnail_palette_body.card-body #trace3d_thumbnail_container {
-      width: 256px;
-      height: 256px;
-      background-color: #ff2987; }
+  #trace3d_thumbnail_palette.card #trace3d_thumbnail_palette_body.card-body #trace3d_thumbnail_container {
+    width: 100%;
+    height: calc(100% - 16px);
+    background-color: #ff2987; }
 
 #threejs-canvas-container {
   margin: 0;

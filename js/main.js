@@ -27,7 +27,9 @@ let containerThreeJS;
 const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
 const scratchSpaceYOffset = 512;
+
 const thumbnailRect = { x: 32, y: scratchSpaceYOffset + 32, w: 512, h: 512 };
+
 let main = async(container) => {
 
     thumbnail = new Thumbnail({ container, palette: $('#trace3d_thumbnail_palette').get(0) });
@@ -159,6 +161,8 @@ let renderLoop = () => {
     planeMesh.matrix.copy( cameraPlaneTransform );
 
     renderer.render(scene, camera);
+
+    thumbnail.render({ sceneCanvas: renderer.domElement, thumbnailRect });
 
 };
 
