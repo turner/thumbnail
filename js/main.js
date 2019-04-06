@@ -23,9 +23,8 @@ let containerThreeJS;
 
 const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
-let [ viewport_width, viewport_height, scratchSpaceYOffset ] = [ 0, 0, 512 ];
-let [ canvas_width, canvas_height ] = [ 0, 0 ];
-let [ x, y, w, h ] = [ 0, 0, 0, 0 ];
+const scratchSpaceYOffset = 512;
+const thumbnailRect = { x: 32, y: scratchSpaceYOffset + 32, w: 512, h: 512 };
 let main = async(container) => {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -35,16 +34,11 @@ let main = async(container) => {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
-    [ canvas_width, canvas_height ] = [ container.offsetWidth, container.offsetHeight + scratchSpaceYOffset ];
-    [ viewport_width, viewport_height ] = [ container.offsetWidth, container.offsetHeight ];
+    const { x, y, w, h } = thumbnailRect;
+    drawThumbnail({ renderer, x, y, w, h, container });
 
-    renderer.setSize(canvas_width, canvas_height);
+    camera = new THREE.PerspectiveCamera(fov, w / h, near, far);
 
-    // sub-region of container
-    [ x, y, w, h ] = [ viewport_width/3, scratchSpaceYOffset + viewport_height/3, viewport_width/3, viewport_height/3 ];
-    renderer.setViewport(x, y, w, h);
-
-    camera = new THREE.PerspectiveCamera(fov, viewport_width / viewport_height, near, far);
     orbitControl = new OrbitControls(camera, renderer.domElement);
     scene = new THREE.Scene();
 
@@ -54,7 +48,15 @@ let main = async(container) => {
 
 };
 
-let poseViewport = ({ renderer, x, y, w, h }) => {
+let drawThumbnail = ({ renderer, x, y, w, h, container }) => {
+
+    const { offsetWidth, offsetHeight } = container;
+
+    const [ canvas_width, canvas_height ] = [ offsetWidth, offsetHeight + scratchSpaceYOffset ];
+    renderer.setSize(canvas_width, canvas_height);
+
+    // thumbnail
+    renderer.setViewport(x, y, w, h);
 
 };
 
@@ -157,16 +159,10 @@ let renderLoop = () => {
 
 let onWindowResize = () => {
 
-    [ canvas_width, canvas_height ] = [ containerThreeJS.offsetWidth, containerThreeJS.offsetHeight + scratchSpaceYOffset ];
-    [ viewport_width, viewport_height ] = [ containerThreeJS.offsetWidth, containerThreeJS.offsetHeight ];
+    const { x, y, w, h } = thumbnailRect;
+    drawThumbnail({ renderer, x, y, w, h, container: containerThreeJS });
 
-    renderer.setSize(canvas_width, canvas_height);
-
-    // sub-region of container
-    [ x, y, w, h ] = [ viewport_width/3, scratchSpaceYOffset + viewport_height/3, viewport_width/3, viewport_height/3 ];
-    renderer.setViewport(x, y, w, h);
-
-    camera.aspect = viewport_width / viewport_height;
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
 
 };
