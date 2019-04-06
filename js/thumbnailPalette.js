@@ -15,18 +15,11 @@ class ThumbnailPalette {
         this.context = canvas.getContext('2d');
 
         this.canvas = canvas;
-        console.log('thumbnail canvas ' + this.canvas.offsetWidth + ' ' + this.canvas.offsetHeight);
 
         layout(container, palette);
 
         makeDraggable(palette, $(palette).find('.trace3d_card_drag_container').get(0));
 
-    }
-
-    render({ sceneCanvas, thumbnailRect }) {
-        const { offsetWidth, offsetHeight } = this.canvas;
-        const yTop = sceneCanvas.offsetHeight - offsetHeight - thumbnailRect.y;
-        this.context.drawImage(sceneCanvas, thumbnailRect.x, yTop, offsetWidth, offsetHeight, 0, 0, offsetWidth, offsetHeight);
     }
 }
 
