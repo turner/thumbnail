@@ -10,7 +10,7 @@ class ThumbnailPalette {
         const $canvas = $(palette).find('canvas');
         const canvas = $canvas.get(0);
 
-        fitToContainer(canvas);
+        fitToContainer(canvas, window.devicePixelRatio);
 
         this.context = canvas.getContext('2d');
 
@@ -24,9 +24,13 @@ class ThumbnailPalette {
     }
 
     render({ sceneCanvas, thumbnailRect }) {
+
         const { offsetWidth, offsetHeight } = this.canvas;
-        const yTop = sceneCanvas.offsetHeight - offsetHeight - thumbnailRect.y;
-        this.context.drawImage(sceneCanvas, thumbnailRect.x, yTop, offsetWidth, offsetHeight, 0, 0, offsetWidth, offsetHeight);
+
+        const yTop = sceneCanvas.offsetHeight - (offsetHeight + thumbnailRect.y);
+
+        const [ sx, sy, w, h ] = [ thumbnailRect.x, yTop, offsetWidth, offsetHeight ].map((a) => { return window.devicePixelRatio * a });
+        this.context.drawImage(sceneCanvas, sx, sy, w, h, 0, 0, w, h);
     }
 }
 
