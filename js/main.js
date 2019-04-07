@@ -125,7 +125,8 @@ let renderLoop = () => {
 
     renderer.render(scene, camera);
 
-    thumbnail.render({ sceneCanvas: renderer.domElement, thumbnailRect });
+    const { domElement } = renderer;
+    thumbnail.render({ domElement, thumbnailRect });
 
 };
 

@@ -23,15 +23,16 @@ class ThumbnailPalette {
 
     }
 
-    render({ sceneCanvas, thumbnailRect }) {
+    render({ domElement, thumbnailRect }) {
 
         const { offsetWidth, offsetHeight } = this.canvas;
 
-        const yTop = sceneCanvas.offsetHeight - (offsetHeight + thumbnailRect.y);
+        const yTop = domElement.offsetHeight - (offsetHeight + thumbnailRect.y);
 
         const [ sx, sy, w, h ] = [ thumbnailRect.x, yTop, offsetWidth, offsetHeight ].map((a) => { return window.devicePixelRatio * a });
-        this.context.drawImage(sceneCanvas, sx, sy, w, h, 0, 0, w, h);
+        this.context.drawImage(domElement, sx, sy, w, h, 0, 0, w, h);
     }
+
 }
 
 let layout = (container, element) => {
