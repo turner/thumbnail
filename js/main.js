@@ -22,8 +22,6 @@ const showSTConfig =
 
 showSTMaterial = new THREE.ShaderMaterial( showSTConfig );
 
-let containerThreeJS;
-
 const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
 const scratchSpaceYOffset = 512;
@@ -36,13 +34,12 @@ let main = async(container) => {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     container.appendChild(renderer.domElement);
-    containerThreeJS = container;
 
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
     const { x, y, w, h } = thumbnailRect;
-    configureThumbnail({renderer, x, y, w, h, container});
+    configureThumbnail({ renderer, x, y, w, h });
 
     camera = new THREE.PerspectiveCamera(fov, w / h, near, far);
 
@@ -55,8 +52,9 @@ let main = async(container) => {
 
 };
 
-let configureThumbnail = ({renderer, x, y, w, h, container}) => {
+let configureThumbnail = ({ renderer, x, y, w, h }) => {
 
+    const container = $(renderer.domElement).parent().get(0);
     const { offsetWidth, offsetHeight } = container;
 
     const [ canvas_width, canvas_height ] = [ offsetWidth, offsetHeight + scratchSpaceYOffset ];
@@ -126,14 +124,14 @@ let renderLoop = () => {
     renderer.render(scene, camera);
 
     const { domElement } = renderer;
-    thumbnail.render({ domElement, thumbnailRect });
+    thumbnail.renderOneTime({domElement, thumbnailRect});
 
 };
 
 let onWindowResize = () => {
 
     const { x, y, w, h } = thumbnailRect;
-    configureThumbnail({renderer, x, y, w, h, container: containerThreeJS});
+    configureThumbnail({ renderer, x, y, w, h });
 
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -166,11 +164,11 @@ let setup = (scene, camera, orbitControl) => {
     // const sphereMesh = new THREE.Mesh(new THREE.SphereBufferGeometry( dimen/2, 32, 16 ), showSTMaterial);
     // scene.add( sphereMesh );
 
-    const texture = new THREE.TextureLoader().load( 'texture/uv.png' );
-    const textureMaterial = new THREE.MeshBasicMaterial( { map: texture } );
+    // const texture = new THREE.TextureLoader().load( 'texture/uv.png' );
+    // const textureMaterial = new THREE.MeshBasicMaterial( { map: texture } );
 
-    planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), textureMaterial);
-    // planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), showSTMaterial);
+    // planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), textureMaterial);
+    planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), showSTMaterial);
     planeMesh.matrixAutoUpdate = false;
     scene.add( planeMesh );
 

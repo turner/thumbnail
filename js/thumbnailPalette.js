@@ -2,6 +2,7 @@
 import { makeDraggable } from "./draggable.js";
 import { fitToContainer } from "./utils.js";
 
+let doRender = true;
 class ThumbnailPalette {
 
     constructor ({ container, palette }) {
@@ -23,14 +24,18 @@ class ThumbnailPalette {
 
     }
 
-    render({ domElement, thumbnailRect }) {
+    renderOneTime({domElement, thumbnailRect}) {
 
-        const { offsetWidth, offsetHeight } = this.canvas;
+        if (doRender) {
+            const { offsetWidth, offsetHeight } = this.canvas;
 
-        const yTop = domElement.offsetHeight - (offsetHeight + thumbnailRect.y);
+            const yTop = domElement.offsetHeight - (offsetHeight + thumbnailRect.y);
 
-        const [ sx, sy, w, h ] = [ thumbnailRect.x, yTop, offsetWidth, offsetHeight ].map((a) => { return window.devicePixelRatio * a });
-        this.context.drawImage(domElement, sx, sy, w, h, 0, 0, w, h);
+            const [ sx, sy, w, h ] = [ thumbnailRect.x, yTop, offsetWidth, offsetHeight ].map((a) => { return window.devicePixelRatio * a });
+            this.context.drawImage(domElement, sx, sy, w, h, 0, 0, w, h);
+
+            doRender = false;
+        }
     }
 
 }
