@@ -24,11 +24,9 @@ showSTMaterial = new THREE.ShaderMaterial( showSTConfig );
 
 const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
-const scratchSpaceYOffset = 512;
-
-const thumbnailRect = { x: 32, y: scratchSpaceYOffset + 32, w: 512, h: 512 };
-
 let textureMaterial;
+
+let rootContainer;
 let main = async(container) => {
 
     thumbnail = new Thumbnail({ container, palette: $('#trace3d_thumbnail_palette').get(0) });
@@ -36,15 +34,18 @@ let main = async(container) => {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     container.appendChild(renderer.domElement);
 
+    rootContainer = container;
+
+    const { offsetWidth: cw, offsetHeight: ch } = container;
+    camera = new THREE.PerspectiveCamera(fov, cw / ch, near, far);
+
+    orbitControl = new OrbitControls(camera, renderer.domElement);
+
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
-    const { x, y, w, h } = thumbnailRect;
-    configureThumbnail({ renderer, x, y, w, h });
+    setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
 
-    camera = new THREE.PerspectiveCamera(fov, w / h, near, far);
-
-    orbitControl = new OrbitControls(camera, renderer.domElement);
     scene = new THREE.Scene();
 
     const textureLoader = new THREE.TextureLoader();
@@ -62,6 +63,17 @@ let main = async(container) => {
     };
 
     textureLoader.load( 'texture/uv.png', onLoad, onProgress, onError );
+
+};
+
+let setRendererSizeAndViewport = ({ renderer, containerSize, thumbnailRealEstateHeight }) => {
+
+    const { width: cw, height: ch } = containerSize;
+    const [ renderWidth, renderHeight ] = [ cw, ch + thumbnailRealEstateHeight ];
+    renderer.setSize(renderWidth, renderHeight);
+
+    // origin is at south-west corner of canvas: x-east, y-north
+    renderer.setViewport(0, thumbnailRealEstateHeight, cw, ch);
 
 };
 
@@ -97,19 +109,6 @@ let setup = (scene, camera, orbitControl) => {
     scene.add( planeMesh );
 
     window.addEventListener( 'resize', onWindowResize, false );
-
-};
-
-let configureThumbnail = ({ renderer, x, y, w, h }) => {
-
-    const container = $(renderer.domElement).parent().get(0);
-    const { offsetWidth, offsetHeight } = container;
-
-    const [ canvas_width, canvas_height ] = [ offsetWidth, offsetHeight + scratchSpaceYOffset ];
-    renderer.setSize(canvas_width, canvas_height);
-
-    // thumbnail
-    renderer.setViewport(x, y, w, h);
 
 };
 
@@ -172,16 +171,17 @@ let renderLoop = () => {
     renderer.render(scene, camera);
 
     const { domElement } = renderer;
-    thumbnail.renderOneTime({domElement, thumbnailRect});
+    thumbnail.renderOneTime({ renderCanvas: domElement });
 
 };
 
 let onWindowResize = () => {
 
-    const { x, y, w, h } = thumbnailRect;
-    configureThumbnail({ renderer, x, y, w, h });
+    const { offsetWidth: cw, offsetHeight: ch } = rootContainer;
 
-    camera.aspect = w / h;
+    setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
+
+    camera.aspect = cw / ch;
     camera.updateProjectionMatrix();
 
 };
