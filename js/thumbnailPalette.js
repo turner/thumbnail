@@ -2,6 +2,8 @@
 import { makeDraggable } from "./draggable.js";
 import { fitToContainer } from "./utils.js";
 
+const scratchSpaceYOffset = 512;
+
 let doRender = true;
 class ThumbnailPalette {
 
@@ -24,15 +26,19 @@ class ThumbnailPalette {
 
     }
 
-    renderOneTime({domElement, thumbnailRect}) {
+    getRect () {
+        return { x: 0, y: 0, width: this.canvas.offsetWidth, height: this.canvas.offsetHeight }
+    }
+
+    renderOneTime({ canvas, thumbnailRect }) {
 
         if (doRender) {
             const { offsetWidth, offsetHeight } = this.canvas;
 
-            const yTop = domElement.offsetHeight - (offsetHeight + thumbnailRect.y);
+            const yTop = canvas.offsetHeight - (offsetHeight + thumbnailRect.y);
 
             const [ sx, sy, w, h ] = [ thumbnailRect.x, yTop, offsetWidth, offsetHeight ].map((a) => { return window.devicePixelRatio * a });
-            this.context.drawImage(domElement, sx, sy, w, h, 0, 0, w, h);
+            this.context.drawImage(canvas, sx, sy, w, h, 0, 0, w, h);
 
             doRender = false;
         }

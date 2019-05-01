@@ -36,15 +36,16 @@ let main = async(container) => {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     container.appendChild(renderer.domElement);
 
+    const { offsetWidth: container_width, offsetHeight: container_height } = container;
+    camera = new THREE.PerspectiveCamera(fov, container_width / container_height, near, far);
+
+    orbitControl = new OrbitControls(camera, renderer.domElement);
+
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
-    const { x, y, w, h } = thumbnailRect;
-    configureThumbnail({ renderer, x, y, w, h });
+    configureThumbnail({ renderer, thumbnailRect: thumbnail.getRect(), containerRect: { x: 0, y: 0, width: container_width, height: container_height}  });
 
-    camera = new THREE.PerspectiveCamera(fov, w / h, near, far);
-
-    orbitControl = new OrbitControls(camera, renderer.domElement);
     scene = new THREE.Scene();
 
     const textureLoader = new THREE.TextureLoader();
@@ -62,6 +63,31 @@ let main = async(container) => {
     };
 
     textureLoader.load( 'texture/uv.png', onLoad, onProgress, onError );
+
+};
+
+let configureThumbnail = ({ renderer, thumbnailRect, containerRect }) => {
+
+    const { width: cw, height: ch } = containerRect;
+    const { width: tw, height: th } = thumbnailRect;
+    renderer.setSize(cw, ch + scratchSpaceYOffset);
+
+    // thumbnail
+    renderer.setViewport(0, 0, w, h);
+
+};
+
+const setRenderSizeWithThumbnailRect = (renderer, thumbnailRect, thumbnailOrigin) => {
+
+    const container = $(renderer.domElement).parent().get(0);
+
+    const { offsetWidth: cw, offsetHeight: ch } = container;
+    const { x: ox, y: oy } = thumbnailOrigin;
+    renderer.setSize(cw + ox, ch + oy);
+
+    // thumbnail real estate
+    const { x, y, width, height } = thumbnailRect;
+    renderer.setViewport(x, y, width, height);
 
 };
 
@@ -97,19 +123,6 @@ let setup = (scene, camera, orbitControl) => {
     scene.add( planeMesh );
 
     window.addEventListener( 'resize', onWindowResize, false );
-
-};
-
-let configureThumbnail = ({ renderer, x, y, w, h }) => {
-
-    const container = $(renderer.domElement).parent().get(0);
-    const { offsetWidth, offsetHeight } = container;
-
-    const [ canvas_width, canvas_height ] = [ offsetWidth, offsetHeight + scratchSpaceYOffset ];
-    renderer.setSize(canvas_width, canvas_height);
-
-    // thumbnail
-    renderer.setViewport(x, y, w, h);
 
 };
 
@@ -171,8 +184,8 @@ let renderLoop = () => {
 
     renderer.render(scene, camera);
 
-    const { domElement } = renderer;
-    thumbnail.renderOneTime({domElement, thumbnailRect});
+    const { domElement: canvas } = renderer;
+    thumbnail.renderOneTime({ canvas, thumbnailRect });
 
 };
 
