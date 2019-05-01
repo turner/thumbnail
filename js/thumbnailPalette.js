@@ -2,10 +2,13 @@
 import { makeDraggable } from "./draggable.js";
 import { fitToContainer } from "./utils.js";
 
+
 let doRender = true;
 class ThumbnailPalette {
 
     constructor ({ container, palette }) {
+
+        this.renderCanvasRealEstateHeight = 768;
 
         // ramp canvas
         const $canvas = $(palette).find('canvas');
@@ -24,15 +27,24 @@ class ThumbnailPalette {
 
     }
 
-    renderOneTime({domElement, thumbnailRect}) {
+    getSize() {
+        return { width: this.canvas.offsetWidth, height: this.canvas.offsetHeight }
+    }
+
+    renderOneTime({ renderCanvas }) {
 
         if (doRender) {
-            const { offsetWidth, offsetHeight } = this.canvas;
 
-            const yTop = domElement.offsetHeight - (offsetHeight + thumbnailRect.y);
+            const { offsetWidth: renderWidth, offsetHeight: renderHeight } = renderCanvas;
 
-            const [ sx, sy, w, h ] = [ thumbnailRect.x, yTop, offsetWidth, offsetHeight ].map((a) => { return window.devicePixelRatio * a });
-            this.context.drawImage(domElement, sx, sy, w, h, 0, 0, w, h);
+            const { width, height } = this.getSize();
+
+            const [ rw, rh, w, h ] = [ renderWidth, renderHeight - this.renderCanvasRealEstateHeight, width, height ].map((pixelValue) => {
+                return window.devicePixelRatio * pixelValue
+            });
+
+            // origin is at north-west corner of canvas: x-east, y-south
+            this.context.drawImage(renderCanvas, 0, 0, rw, rh, 0, 0, w, h);
 
             doRender = false;
         }

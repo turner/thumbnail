@@ -1,6 +1,8 @@
 import * as THREE from './threejs_es6/three.module.js';
 import OrbitControls from './threejs_es6/orbit-controls-es6.js';
 import Thumbnail from './thumbnailPalette.js';
+import Model from './model.js';
+
 import { appleCrayonColorThreeJS, appleCrayonColorHexValue } from './color.js';
 
 let scene;
@@ -24,11 +26,12 @@ showSTMaterial = new THREE.ShaderMaterial( showSTConfig );
 
 const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
-const scratchSpaceYOffset = 512;
-
-const thumbnailRect = { x: 32, y: scratchSpaceYOffset + 32, w: 512, h: 512 };
-
 let textureMaterial;
+
+let rootContainer;
+
+let model;
+
 let main = async(container) => {
 
     thumbnail = new Thumbnail({ container, palette: $('#trace3d_thumbnail_palette').get(0) });
@@ -36,21 +39,31 @@ let main = async(container) => {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     container.appendChild(renderer.domElement);
 
+    rootContainer = container;
+
+    const { offsetWidth: cw, offsetHeight: ch } = container;
+    camera = new THREE.PerspectiveCamera(fov, cw / ch, near, far);
+
+    orbitControl = new OrbitControls(camera, renderer.domElement);
+
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
-    const { x, y, w, h } = thumbnailRect;
-    configureThumbnail({ renderer, x, y, w, h });
+    setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
 
-    camera = new THREE.PerspectiveCamera(fov, w / h, near, far);
-
-    orbitControl = new OrbitControls(camera, renderer.domElement);
     scene = new THREE.Scene();
+    scene.background = appleCrayonColorThreeJS('magnesium');
 
     const textureLoader = new THREE.TextureLoader();
 
     const onLoad = (texture) => {
+
         textureMaterial = new THREE.MeshBasicMaterial( { map: texture } );
+
+        const dimen = 16;
+        const [ sx, sy, sz, tessx, tessy, tessz, material ] = [ dimen, dimen/4, dimen/2, 4, 4, 4, showSTMaterial ];
+        model = new Model({ sx, sy, sz, tessx, tessy, tessz, material });
+
         setup(scene, camera, orbitControl);
         renderLoop();
     };
@@ -69,27 +82,19 @@ let target;
 let planeMesh;
 let setup = (scene, camera, orbitControl) => {
 
-    scene.background = appleCrayonColorThreeJS('magnesium');
+    const bbox = model.getBBox();
 
-    const [ targetX, targetY, targetZ ] = [ 0, 0, 0 ];
-    target = new THREE.Vector3(targetX, targetY, targetZ);
+    const { target:_t, position } = model.niceCameraPose();
+    target = _t;
 
-    const dimen = 16;
-
-    let [ locationX, locationY, locationZ ] = [ dimen, dimen, dimen ];
-
-    camera.position.set(locationX, locationY, locationZ);
+    camera.position.copy(position);
     camera.lookAt( target );
 
     orbitControl.screenSpacePanning = false;
     orbitControl.target = target;
     orbitControl.update();
 
-    const boxMesh = new THREE.Mesh(new THREE.BoxBufferGeometry( dimen, dimen/4, dimen/2, 4, 4, 4 ), showSTMaterial);
-    scene.add( boxMesh );
-
-    // const sphereMesh = new THREE.Mesh(new THREE.SphereBufferGeometry( dimen/2, 32, 16 ), showSTMaterial);
-    // scene.add( sphereMesh );
+    scene.add(model.mesh);
 
     planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), textureMaterial);
     // planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), showSTMaterial);
@@ -100,16 +105,14 @@ let setup = (scene, camera, orbitControl) => {
 
 };
 
-let configureThumbnail = ({ renderer, x, y, w, h }) => {
+let setRendererSizeAndViewport = ({ renderer, containerSize, thumbnailRealEstateHeight }) => {
 
-    const container = $(renderer.domElement).parent().get(0);
-    const { offsetWidth, offsetHeight } = container;
+    const { width: cw, height: ch } = containerSize;
+    const [ renderWidth, renderHeight ] = [ cw, ch + thumbnailRealEstateHeight ];
+    renderer.setSize(renderWidth, renderHeight);
 
-    const [ canvas_width, canvas_height ] = [ offsetWidth, offsetHeight + scratchSpaceYOffset ];
-    renderer.setSize(canvas_width, canvas_height);
-
-    // thumbnail
-    renderer.setViewport(x, y, w, h);
+    // origin is at south-west corner of canvas: x-east, y-north
+    renderer.setViewport(0, thumbnailRealEstateHeight, cw, ch);
 
 };
 
@@ -172,16 +175,17 @@ let renderLoop = () => {
     renderer.render(scene, camera);
 
     const { domElement } = renderer;
-    thumbnail.renderOneTime({domElement, thumbnailRect});
+    thumbnail.renderOneTime({ renderCanvas: domElement });
 
 };
 
 let onWindowResize = () => {
 
-    const { x, y, w, h } = thumbnailRect;
-    configureThumbnail({ renderer, x, y, w, h });
+    const { offsetWidth: cw, offsetHeight: ch } = rootContainer;
 
-    camera.aspect = w / h;
+    setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
+
+    camera.aspect = cw / ch;
     camera.updateProjectionMatrix();
 
 };
