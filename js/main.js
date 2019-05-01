@@ -1,6 +1,8 @@
 import * as THREE from './threejs_es6/three.module.js';
 import OrbitControls from './threejs_es6/orbit-controls-es6.js';
 import Thumbnail from './thumbnailPalette.js';
+import Model from './model.js';
+
 import { appleCrayonColorThreeJS, appleCrayonColorHexValue } from './color.js';
 
 let scene;
@@ -27,6 +29,9 @@ const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 let textureMaterial;
 
 let rootContainer;
+
+let model;
+
 let main = async(container) => {
 
     thumbnail = new Thumbnail({ container, palette: $('#trace3d_thumbnail_palette').get(0) });
@@ -47,11 +52,18 @@ let main = async(container) => {
     setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
 
     scene = new THREE.Scene();
+    scene.background = appleCrayonColorThreeJS('magnesium');
 
     const textureLoader = new THREE.TextureLoader();
 
     const onLoad = (texture) => {
+
         textureMaterial = new THREE.MeshBasicMaterial( { map: texture } );
+
+        const dimen = 16;
+        const [ sx, sy, sz, tessx, tessy, tessz, material ] = [ dimen, dimen/4, dimen/2, 4, 4, 4, showSTMaterial ];
+        model = new Model({ sx, sy, sz, tessx, tessy, tessz, material });
+
         setup(scene, camera, orbitControl);
         renderLoop();
     };
@@ -66,6 +78,33 @@ let main = async(container) => {
 
 };
 
+let target;
+let planeMesh;
+let setup = (scene, camera, orbitControl) => {
+
+    const bbox = model.getBBox();
+
+    const { target:_t, position } = model.niceCameraPose();
+    target = _t;
+
+    camera.position.copy(position);
+    camera.lookAt( target );
+
+    orbitControl.screenSpacePanning = false;
+    orbitControl.target = target;
+    orbitControl.update();
+
+    scene.add(model.mesh);
+
+    planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), textureMaterial);
+    // planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), showSTMaterial);
+    planeMesh.matrixAutoUpdate = false;
+    scene.add( planeMesh );
+
+    window.addEventListener( 'resize', onWindowResize, false );
+
+};
+
 let setRendererSizeAndViewport = ({ renderer, containerSize, thumbnailRealEstateHeight }) => {
 
     const { width: cw, height: ch } = containerSize;
@@ -74,41 +113,6 @@ let setRendererSizeAndViewport = ({ renderer, containerSize, thumbnailRealEstate
 
     // origin is at south-west corner of canvas: x-east, y-north
     renderer.setViewport(0, thumbnailRealEstateHeight, cw, ch);
-
-};
-
-let target;
-let planeMesh;
-let setup = (scene, camera, orbitControl) => {
-
-    scene.background = appleCrayonColorThreeJS('magnesium');
-
-    const [ targetX, targetY, targetZ ] = [ 0, 0, 0 ];
-    target = new THREE.Vector3(targetX, targetY, targetZ);
-
-    const dimen = 16;
-
-    let [ locationX, locationY, locationZ ] = [ dimen, dimen, dimen ];
-
-    camera.position.set(locationX, locationY, locationZ);
-    camera.lookAt( target );
-
-    orbitControl.screenSpacePanning = false;
-    orbitControl.target = target;
-    orbitControl.update();
-
-    const boxMesh = new THREE.Mesh(new THREE.BoxBufferGeometry( dimen, dimen/4, dimen/2, 4, 4, 4 ), showSTMaterial);
-    scene.add( boxMesh );
-
-    // const sphereMesh = new THREE.Mesh(new THREE.SphereBufferGeometry( dimen/2, 32, 16 ), showSTMaterial);
-    // scene.add( sphereMesh );
-
-    planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), textureMaterial);
-    // planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), showSTMaterial);
-    planeMesh.matrixAutoUpdate = false;
-    scene.add( planeMesh );
-
-    window.addEventListener( 'resize', onWindowResize, false );
 
 };
 
