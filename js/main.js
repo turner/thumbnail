@@ -49,7 +49,7 @@ let main = async(container) => {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
-    setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
+    setRendererSizeAndViewportWithThumbnailRealEstate({renderer, containerSize: {width: cw, height: ch}, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight});
 
     scene = new THREE.Scene();
     scene.background = appleCrayonColorThreeJS('magnesium');
@@ -82,8 +82,6 @@ let target;
 let planeMesh;
 let setup = (scene, camera, orbitControl) => {
 
-    const bbox = model.getBBox();
-
     const { target:_t, position } = model.niceCameraPose();
     target = _t;
 
@@ -105,7 +103,7 @@ let setup = (scene, camera, orbitControl) => {
 
 };
 
-let setRendererSizeAndViewport = ({ renderer, containerSize, thumbnailRealEstateHeight }) => {
+let setRendererSizeAndViewportWithThumbnailRealEstate = ({ renderer, containerSize, thumbnailRealEstateHeight }) => {
 
     const { width: cw, height: ch } = containerSize;
     const [ renderWidth, renderHeight ] = [ cw, ch + thumbnailRealEstateHeight ];
@@ -183,7 +181,7 @@ let onWindowResize = () => {
 
     const { offsetWidth: cw, offsetHeight: ch } = rootContainer;
 
-    setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
+    setRendererSizeAndViewportWithThumbnailRealEstate({renderer, containerSize: {width: cw, height: ch}, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight});
 
     camera.aspect = cw / ch;
     camera.updateProjectionMatrix();
