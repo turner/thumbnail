@@ -1,13 +1,16 @@
 import * as THREE from "./threejs_es6/three.module.js";
 
 class Model {
-    constructor ({ sx, sy, sz, tessx, tessy, tessz, material }) {
-
-        this.mesh = new THREE.Mesh(new THREE.BoxBufferGeometry( sx, sy, sz, tessx, tessy, tessz ), material);
+    constructor ({ sx, sy, sz, geometry, material }) {
 
         this.sx = sx;
         this.sy = sy;
         this.sz = sz;
+
+        this.geometry = geometry;
+        this.material = material;
+
+        this.mesh = new THREE.Mesh(geometry, material);
 
     }
 
