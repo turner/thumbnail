@@ -8,16 +8,16 @@ const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 let doRender = true;
 class ThumbnailPalette {
 
-    constructor ({ container, palette, renderer, model }) {
+    constructor ({ container, palette, renderer, model, material }) {
 
-        // const $canvas = $(palette).find('canvas');
-        // const canvas = $canvas.get(0);
-        //
-        // fitToContainer(canvas, window.devicePixelRatio);
-        //
-        // this.context = canvas.getContext('2d');
-        //
-        // this.canvas = canvas;
+        const $canvas = $(palette).find('canvas');
+        const canvas = $canvas.get(0);
+
+        fitToContainer(canvas, window.devicePixelRatio);
+
+        this.context = canvas.getContext('2d');
+
+        this.canvas = canvas;
 
         // renderer
         const renderContainer = $(palette).find('#trace3d_thumbnail_container').get(0);
@@ -26,10 +26,7 @@ class ThumbnailPalette {
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(renderWidth, renderHeight);
 
-        // TODO: HACK HACK HACK. iInsert rendering canvas in DOM
-        renderContainer.appendChild(renderer.domElement);
-
-        renderer.setClearColor(appleCrayonColorHexValue('magnesium'));
+        renderer.setClearColor(appleCrayonColorHexValue('sky'));
 
         this.renderer = renderer;
 
@@ -42,9 +39,9 @@ class ThumbnailPalette {
 
         // scene
         this.scene = new THREE.Scene();
-        this.scene.background = appleCrayonColorThreeJS('aqua');
+        this.scene.background = appleCrayonColorThreeJS('sky');
 
-        this.scene.add(model.mesh);
+        this.scene.add(new THREE.Mesh(model.geometry, material));
 
         layout(container, palette);
 
@@ -54,38 +51,26 @@ class ThumbnailPalette {
 
     }
 
-    getSize() {
-        return { width: this.canvas.offsetWidth, height: this.canvas.offsetHeight }
-    }
-
-    render () {
-        const { scene, camera } = this;
-        this.renderer.render( scene, camera );
-    }
-
     renderOneTime() {
 
         if (doRender) {
 
             this.render();
 
-            /*
-             const { width: renderWidth, height: renderHeight } = this.renderer.domElement;
-
-            const { width, height } = this.getSize();
-
-            const [ w, h ] = [ width, height ].map((pixelValue) => {
-                return window.devicePixelRatio * pixelValue
-            });
+            const { width: rw, height: rh } = this.renderer.domElement;
+            const { width:  w, height:  h } = this.canvas;
 
             // origin is at north-west corner of canvas: x-east, y-south
-            this.context.drawImage(this.renderer.domElement, 0, 0, renderWidth, renderHeight, 0, 0, w, h);
-
-             */
+            this.context.drawImage(this.renderer.domElement, 0, 0, rw, rh, 0, 0, w, h);
 
 
             doRender = false;
         }
+    }
+
+    render () {
+        const { scene, camera } = this;
+        this.renderer.render( scene, camera );
     }
 
     onWindowResize(container, palette) {

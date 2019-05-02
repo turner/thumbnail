@@ -31,6 +31,7 @@ let textureMaterial;
 let rootContainer;
 
 let model;
+let boxGeometry;
 
 let main = async(container) => {
 
@@ -60,14 +61,16 @@ let main = async(container) => {
 
         const dimen = 16;
         const [ sx, sy, sz, tessx, tessy, tessz, material ] = [ dimen, dimen/4, dimen/2, 4, 4, 4, showSTMaterial ];
-        model = new Model({ sx, sy, sz, tessx, tessy, tessz, material });
+        boxGeometry = new THREE.BoxBufferGeometry( sx, sy, sz, tessx, tessy, tessz );
+        model = new Model({ sx, sy, sz, geometry: boxGeometry, material });
 
         const thumbnailConfig =
             {
                 container,
                 palette: $('#trace3d_thumbnail_palette').get(0),
                 renderer: new THREE.WebGLRenderer(),
-                model
+                model,
+                material: new THREE.MeshBasicMaterial({ color: appleCrayonColorThreeJS('salmon') })
             };
 
         thumbnail = new Thumbnail(thumbnailConfig);
