@@ -34,8 +34,6 @@ let model;
 
 let main = async(container) => {
 
-    thumbnail = new Thumbnail({ container, palette: $('#trace3d_thumbnail_palette').get(0) });
-
     renderer = new THREE.WebGLRenderer({ antialias: true });
     container.appendChild(renderer.domElement);
 
@@ -49,7 +47,7 @@ let main = async(container) => {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
-    setRendererSizeAndViewportWithThumbnailRealEstate({renderer, containerSize: {width: cw, height: ch}, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight});
+    setRendererSize({ renderer, containerSize: { width: cw, height: ch } });
 
     scene = new THREE.Scene();
     scene.background = appleCrayonColorThreeJS('magnesium');
@@ -63,6 +61,16 @@ let main = async(container) => {
         const dimen = 16;
         const [ sx, sy, sz, tessx, tessy, tessz, material ] = [ dimen, dimen/4, dimen/2, 4, 4, 4, showSTMaterial ];
         model = new Model({ sx, sy, sz, tessx, tessy, tessz, material });
+
+        const thumbnailConfig =
+            {
+                container,
+                palette: $('#trace3d_thumbnail_palette').get(0),
+                renderer: new THREE.WebGLRenderer(),
+                model
+            };
+
+        thumbnail = new Thumbnail(thumbnailConfig);
 
         setup(scene, camera, orbitControl);
         renderLoop();
@@ -103,15 +111,9 @@ let setup = (scene, camera, orbitControl) => {
 
 };
 
-let setRendererSizeAndViewportWithThumbnailRealEstate = ({ renderer, containerSize, thumbnailRealEstateHeight }) => {
-
+let setRendererSize = ({ renderer, containerSize }) => {
     const { width: cw, height: ch } = containerSize;
-    const [ renderWidth, renderHeight ] = [ cw, ch + thumbnailRealEstateHeight ];
-    renderer.setSize(renderWidth, renderHeight);
-
-    // origin is at south-west corner of canvas: x-east, y-north
-    renderer.setViewport(0, thumbnailRealEstateHeight, cw, ch);
-
+    renderer.setSize(cw, ch);
 };
 
 let matrix4Factory = new THREE.Matrix4();
@@ -172,8 +174,7 @@ let renderLoop = () => {
 
     renderer.render(scene, camera);
 
-    const { domElement } = renderer;
-    thumbnail.renderOneTime({ renderCanvas: domElement });
+    thumbnail.renderOneTime();
 
 };
 
@@ -181,7 +182,7 @@ let onWindowResize = () => {
 
     const { offsetWidth: cw, offsetHeight: ch } = rootContainer;
 
-    setRendererSizeAndViewportWithThumbnailRealEstate({renderer, containerSize: {width: cw, height: ch}, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight});
+    setRendererSize({ renderer, containerSize: { width: cw, height: ch } });
 
     camera.aspect = cw / ch;
     camera.updateProjectionMatrix();
