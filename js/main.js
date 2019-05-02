@@ -1,6 +1,8 @@
 import * as THREE from './threejs_es6/three.module.js';
 import OrbitControls from './threejs_es6/orbit-controls-es6.js';
-import Thumbnail from './thumbnailPalette.js';
+import ThumbnailPanel from './thumbnailPanel.js';
+import MeshModel from './meshModel.js';
+
 import { appleCrayonColorThreeJS, appleCrayonColorHexValue } from './color.js';
 
 let scene;
@@ -8,7 +10,7 @@ let renderer;
 let camera;
 let orbitControl;
 
-let thumbnail;
+let thumbnailPanel;
 
 let showSTMaterial;
 
@@ -27,9 +29,11 @@ const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 let textureMaterial;
 
 let rootContainer;
-let main = async(container) => {
 
-    thumbnail = new Thumbnail({ container, palette: $('#trace3d_thumbnail_palette').get(0) });
+let model;
+let boxGeometry;
+
+let main = async(container) => {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     container.appendChild(renderer.domElement);
@@ -44,14 +48,33 @@ let main = async(container) => {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(appleCrayonColorHexValue('snow'));
 
-    setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
+    setRendererSize({ renderer, containerSize: { width: cw, height: ch } });
 
     scene = new THREE.Scene();
+    scene.background = appleCrayonColorThreeJS('magnesium');
 
     const textureLoader = new THREE.TextureLoader();
 
     const onLoad = (texture) => {
+
         textureMaterial = new THREE.MeshBasicMaterial( { map: texture } );
+
+        const dimen = 16;
+        const [ sx, sy, sz, tessx, tessy, tessz, material ] = [ dimen, dimen/4, dimen/2, 4, 4, 4, showSTMaterial ];
+        boxGeometry = new THREE.BoxBufferGeometry( sx, sy, sz, tessx, tessy, tessz );
+        model = new MeshModel({ sx, sy, sz, geometry: boxGeometry, material });
+
+        const thumbnailPanelConfig =
+            {
+                container,
+                palette: $('#trace3d_thumbnail_palette').get(0),
+                renderer: new THREE.WebGLRenderer(),
+                model,
+                material: new THREE.MeshBasicMaterial({ color: appleCrayonColorThreeJS('salmon') })
+            };
+
+        thumbnailPanel = new ThumbnailPanel(thumbnailPanelConfig);
+
         setup(scene, camera, orbitControl);
         renderLoop();
     };
@@ -66,42 +89,21 @@ let main = async(container) => {
 
 };
 
-let setRendererSizeAndViewport = ({ renderer, containerSize, thumbnailRealEstateHeight }) => {
-
-    const { width: cw, height: ch } = containerSize;
-    const [ renderWidth, renderHeight ] = [ cw, ch + thumbnailRealEstateHeight ];
-    renderer.setSize(renderWidth, renderHeight);
-
-    // origin is at south-west corner of canvas: x-east, y-north
-    renderer.setViewport(0, thumbnailRealEstateHeight, cw, ch);
-
-};
-
 let target;
 let planeMesh;
 let setup = (scene, camera, orbitControl) => {
 
-    scene.background = appleCrayonColorThreeJS('magnesium');
+    const { target:_t, position } = model.getNiceCameraPose();
+    target = _t;
 
-    const [ targetX, targetY, targetZ ] = [ 0, 0, 0 ];
-    target = new THREE.Vector3(targetX, targetY, targetZ);
-
-    const dimen = 16;
-
-    let [ locationX, locationY, locationZ ] = [ dimen, dimen, dimen ];
-
-    camera.position.set(locationX, locationY, locationZ);
+    camera.position.copy(position);
     camera.lookAt( target );
 
     orbitControl.screenSpacePanning = false;
     orbitControl.target = target;
     orbitControl.update();
 
-    const boxMesh = new THREE.Mesh(new THREE.BoxBufferGeometry( dimen, dimen/4, dimen/2, 4, 4, 4 ), showSTMaterial);
-    scene.add( boxMesh );
-
-    // const sphereMesh = new THREE.Mesh(new THREE.SphereBufferGeometry( dimen/2, 32, 16 ), showSTMaterial);
-    // scene.add( sphereMesh );
+    scene.add(model.mesh);
 
     planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), textureMaterial);
     // planeMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry( 2, 2, 8, 8 ), showSTMaterial);
@@ -110,6 +112,11 @@ let setup = (scene, camera, orbitControl) => {
 
     window.addEventListener( 'resize', onWindowResize, false );
 
+};
+
+let setRendererSize = ({ renderer, containerSize }) => {
+    const { width: cw, height: ch } = containerSize;
+    renderer.setSize(cw, ch);
 };
 
 let matrix4Factory = new THREE.Matrix4();
@@ -170,8 +177,7 @@ let renderLoop = () => {
 
     renderer.render(scene, camera);
 
-    const { domElement } = renderer;
-    thumbnail.renderOneTime({ renderCanvas: domElement });
+    thumbnailPanel.renderOneTime();
 
 };
 
@@ -179,7 +185,7 @@ let onWindowResize = () => {
 
     const { offsetWidth: cw, offsetHeight: ch } = rootContainer;
 
-    setRendererSizeAndViewport({ renderer, containerSize: { width: cw, height: ch }, thumbnailRealEstateHeight: thumbnail.renderCanvasRealEstateHeight });
+    setRendererSize({ renderer, containerSize: { width: cw, height: ch } });
 
     camera.aspect = cw / ch;
     camera.updateProjectionMatrix();
