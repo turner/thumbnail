@@ -25,6 +25,11 @@ class ThumbnailPalette {
 
         makeDraggable(palette, $(palette).find('.trace3d_card_drag_container').get(0));
 
+        $(window).on('resize.thumbnail_palette', () => {
+            this.onWindowResize(container, palette)
+        });
+
+
     }
 
     getSize() {
@@ -50,17 +55,21 @@ class ThumbnailPalette {
         }
     }
 
+    onWindowResize(container, palette) {
+        layout(container, palette);
+    }
+
 }
 
-let layout = (container, element) => {
+let layout = (container, palette) => {
 
-    const containerRect = container.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
+    const { width: cw, height: ch } = container.getBoundingClientRect();
+    const { width: pw, height: ph } = palette.getBoundingClientRect();
 
-    const left = containerRect.width - 1.1 * elementRect.width;
-    const top = containerRect.height - 1.1 * elementRect.height;
+    const left = cw - 1.1 * pw;
+    const  top = ch - 1.1 * ph;
 
-    $(element).offset( { left, top } );
+    $(palette).offset( { left, top } );
 
 };
 
