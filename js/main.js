@@ -1,7 +1,7 @@
 import * as THREE from './threejs_es6/three.module.js';
 import OrbitControls from './threejs_es6/orbit-controls-es6.js';
-import Thumbnail from './thumbnailPalette.js';
-import Model from './model.js';
+import ThumbnailPanel from './thumbnailPanel.js';
+import MeshModel from './meshModel.js';
 
 import { appleCrayonColorThreeJS, appleCrayonColorHexValue } from './color.js';
 
@@ -10,7 +10,7 @@ let renderer;
 let camera;
 let orbitControl;
 
-let thumbnail;
+let thumbnailPanel;
 
 let showSTMaterial;
 
@@ -62,9 +62,9 @@ let main = async(container) => {
         const dimen = 16;
         const [ sx, sy, sz, tessx, tessy, tessz, material ] = [ dimen, dimen/4, dimen/2, 4, 4, 4, showSTMaterial ];
         boxGeometry = new THREE.BoxBufferGeometry( sx, sy, sz, tessx, tessy, tessz );
-        model = new Model({ sx, sy, sz, geometry: boxGeometry, material });
+        model = new MeshModel({ sx, sy, sz, geometry: boxGeometry, material });
 
-        const thumbnailConfig =
+        const thumbnailPanelConfig =
             {
                 container,
                 palette: $('#trace3d_thumbnail_palette').get(0),
@@ -73,7 +73,7 @@ let main = async(container) => {
                 material: new THREE.MeshBasicMaterial({ color: appleCrayonColorThreeJS('salmon') })
             };
 
-        thumbnail = new Thumbnail(thumbnailConfig);
+        thumbnailPanel = new ThumbnailPanel(thumbnailPanelConfig);
 
         setup(scene, camera, orbitControl);
         renderLoop();
@@ -93,7 +93,7 @@ let target;
 let planeMesh;
 let setup = (scene, camera, orbitControl) => {
 
-    const { target:_t, position } = model.niceCameraPose();
+    const { target:_t, position } = model.getNiceCameraPose();
     target = _t;
 
     camera.position.copy(position);
@@ -177,7 +177,7 @@ let renderLoop = () => {
 
     renderer.render(scene, camera);
 
-    thumbnail.renderOneTime();
+    thumbnailPanel.renderOneTime();
 
 };
 

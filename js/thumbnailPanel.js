@@ -6,7 +6,7 @@ import { appleCrayonColorHexValue, appleCrayonColorThreeJS } from "./color.js";
 const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
 let doRender = true;
-class ThumbnailPalette {
+class ThumbnailPanel {
 
     constructor ({ container, palette, renderer, model, material }) {
 
@@ -33,7 +33,7 @@ class ThumbnailPalette {
         // camera
         this.camera = new THREE.PerspectiveCamera(fov, renderWidth / renderHeight, near, far);
 
-        const { target, position } = model.niceCameraPose();
+        const { target, position } = model.getCameraPoseAlongAxis('-z');
         this.camera.position.copy(position);
         this.camera.lookAt( target );
 
@@ -91,4 +91,4 @@ let layout = (container, palette) => {
 
 };
 
-export default ThumbnailPalette;
+export default ThumbnailPanel;
