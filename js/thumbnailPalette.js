@@ -1,34 +1,56 @@
-
+import * as THREE from './threejs_es6/three.module.js';
 import { makeDraggable } from "./draggable.js";
 import { fitToContainer } from "./utils.js";
+import { appleCrayonColorHexValue, appleCrayonColorThreeJS } from "./color.js";
 
+const [ fov, near, far ] = [ 40, 1e-1, 7e2 ];
 
 let doRender = true;
 class ThumbnailPalette {
 
-    constructor ({ container, palette }) {
+    constructor ({ container, palette, renderer, model }) {
 
-        this.renderCanvasRealEstateHeight = 768;
+        // const $canvas = $(palette).find('canvas');
+        // const canvas = $canvas.get(0);
+        //
+        // fitToContainer(canvas, window.devicePixelRatio);
+        //
+        // this.context = canvas.getContext('2d');
+        //
+        // this.canvas = canvas;
 
-        // ramp canvas
-        const $canvas = $(palette).find('canvas');
-        const canvas = $canvas.get(0);
+        // renderer
+        const renderContainer = $(palette).find('#trace3d_thumbnail_container').get(0);
+        const { width: renderWidth, height: renderHeight } = renderContainer.getBoundingClientRect();
 
-        fitToContainer(canvas, window.devicePixelRatio);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(renderWidth, renderHeight);
 
-        this.context = canvas.getContext('2d');
+        // TODO: HACK HACK HACK. iInsert rendering canvas in DOM
+        renderContainer.appendChild(renderer.domElement);
 
-        this.canvas = canvas;
-        console.log('thumbnail canvas ' + this.canvas.offsetWidth + ' ' + this.canvas.offsetHeight);
+        renderer.setClearColor(appleCrayonColorHexValue('magnesium'));
+
+        this.renderer = renderer;
+
+        // camera
+        this.camera = new THREE.PerspectiveCamera(fov, renderWidth / renderHeight, near, far);
+
+        const { target, position } = model.niceCameraPose();
+        this.camera.position.copy(position);
+        this.camera.lookAt( target );
+
+        // scene
+        this.scene = new THREE.Scene();
+        this.scene.background = appleCrayonColorThreeJS('aqua');
+
+        this.scene.add(model.mesh);
 
         layout(container, palette);
 
         makeDraggable(palette, $(palette).find('.trace3d_card_drag_container').get(0));
 
-        $(window).on('resize.thumbnail_palette', () => {
-            this.onWindowResize(container, palette)
-        });
-
+        $(window).on('resize.thumbnail_palette', () => { this.onWindowResize(container, palette) });
 
     }
 
@@ -36,20 +58,31 @@ class ThumbnailPalette {
         return { width: this.canvas.offsetWidth, height: this.canvas.offsetHeight }
     }
 
-    renderOneTime({ renderCanvas }) {
+    render () {
+        const { scene, camera } = this;
+        this.renderer.render( scene, camera );
+    }
+
+    renderOneTime() {
 
         if (doRender) {
 
-            const { offsetWidth: renderWidth, offsetHeight: renderHeight } = renderCanvas;
+            this.render();
+
+            /*
+             const { width: renderWidth, height: renderHeight } = this.renderer.domElement;
 
             const { width, height } = this.getSize();
 
-            const [ rw, rh, w, h ] = [ renderWidth, renderHeight - this.renderCanvasRealEstateHeight, width, height ].map((pixelValue) => {
+            const [ w, h ] = [ width, height ].map((pixelValue) => {
                 return window.devicePixelRatio * pixelValue
             });
 
             // origin is at north-west corner of canvas: x-east, y-south
-            this.context.drawImage(renderCanvas, 0, 0, rw, rh, 0, 0, w, h);
+            this.context.drawImage(this.renderer.domElement, 0, 0, renderWidth, renderHeight, 0, 0, w, h);
+
+             */
+
 
             doRender = false;
         }
